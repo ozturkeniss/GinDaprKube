@@ -4,7 +4,7 @@ A modern, event-driven microservices architecture built with Go, DAPR, Kafka, an
 
 ## 🏗️ Architecture Overview
 
-![Uploading image.png…]()
+![48eeb217-dfef-427e-8d35-26aae1e15097](https://github.com/user-attachments/assets/18ec6051-5632-42b5-8714-c9cffcf47e63)
 
 
 ## 🔄 Event Flow Architecture
