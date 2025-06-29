@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # Storage
+  - storage/persistent-volumes.yaml
+  - storage/persistent-volume-claims.yaml
+  
+  # ConfigMaps
+  - configmaps/postgres-config.yaml
+  - configmaps/kafka-config.yaml
+  
+  # Services
+  - services/postgres-service.yaml
+  - services/redis-service.yaml
+  - services/kafka-services.yaml
+  - services/gingateway-service.yaml
+  
+  # Deployments
+  - deployments/postgres-deployment.yaml
+  - deployments/redis-deployment.yaml
+  - deployments/kafka-deployments.yaml
+  - deployments/gingateway-deployment.yaml
+  
+  # HPA
+  - hpa/postgres-hpa.yaml
+  - hpa/redis-hpa.yaml
+  - hpa/kafka-hpa.yaml
+
+commonLabels:
+  app.kubernetes.io/name: daprps
+  app.kubernetes.io/part-of: daprps 

@@ -1,0 +1,31 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: redis-state
+  namespace: default
+spec:
+  type: state.redis
+  version: v1
+  metadata:
+    - name: redisHost
+      value: "redis:6379"
+    - name: redisPassword
+      value: ""
+    - name: redisDB
+      value: "0"
+    - name: keyPrefix
+      value: "dapr:"
+    - name: maxRetries
+      value: "3"
+    - name: retryInterval
+      value: "100ms"
+    - name: enableTLS
+      value: "false"
+    - name: failover
+      value: "false"
+    - name: sentinelMasterName
+      value: ""
+    - name: maxRetryBackoff
+      value: "1000"
+    - name: enableQuery
+      value: "false" 

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: daprps-prod
+  labels:
+    name: daprps-prod
+    environment: production 

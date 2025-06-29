@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package basket;
+
+option go_package = "daprps/api/proto/basket";
+
+service BasketService {
+  rpc GetBasket(GetBasketRequest) returns (GetBasketResponse);
+  rpc AddItem(AddItemRequest) returns (AddItemResponse);
+  rpc RemoveItem(RemoveItemRequest) returns (RemoveItemResponse);
+  rpc UpdateQuantity(UpdateQuantityRequest) returns (UpdateQuantityResponse);
+  rpc ClearBasket(ClearBasketRequest) returns (ClearBasketResponse);
+}
+
+message BasketItem {
+  string product_id = 1;
+  string product_name = 2;
+  double price = 3;
+  int32 quantity = 4;
+}
+
+message Basket {
+  string user_id = 1;
+  repeated BasketItem items = 2;
+  double total_amount = 3;
+  string created_at = 4;
+  string updated_at = 5;
+}
+
+message GetBasketRequest {
+  string user_id = 1;
+}
+
+message GetBasketResponse {
+  Basket basket = 1;
+  string error = 2;
+}
+
+message AddItemRequest {
+  string user_id = 1;
+  string product_id = 2;
+  int32 quantity = 3;
+}
+
+message AddItemResponse {
+  Basket basket = 1;
+  bool success = 2;
+  string error = 3;
+}
+
+message RemoveItemRequest {
+  string user_id = 1;
+  string product_id = 2;
+}
+
+message RemoveItemResponse {
+  Basket basket = 1;
+  bool success = 2;
+  string error = 3;
+}
+
+message UpdateQuantityRequest {
+  string user_id = 1;
+  string product_id = 2;
+  int32 quantity = 3;
+}
+
+message UpdateQuantityResponse {
+  Basket basket = 1;
+  bool success = 2;
+  string error = 3;
+}
+
+message ClearBasketRequest {
+  string user_id = 1;
+}
+
+message ClearBasketResponse {
+  bool success = 1;
+  string error = 2;
+} 

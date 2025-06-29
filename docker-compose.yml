@@ -1,0 +1,223 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: daprps-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - daprps-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Basket Service
+  redis:
+    image: redis:7-alpine
+    container_name: daprps-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - daprps-network
+
+  # Kafka for Event Streaming
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: daprps-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - daprps-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: daprps-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - daprps-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Product Service
+  product-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.product
+    container_name: daprps-product-service
+    ports:
+      - "50051:50051"
+      - "8081:8081"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=productdb
+      - GRPC_PORT=50051
+      - HTTP_PORT=8081
+      - KAFKA_BROKERS=kafka:29092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - daprps-network
+    restart: unless-stopped
+
+  # Payment Service
+  payment-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.payment
+    container_name: daprps-payment-service
+    ports:
+      - "50052:50052"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=paymentdb
+      - GRPC_PORT=50052
+      - KAFKA_BROKERS=kafka:29092
+      - KAFKA_CONSUMER_GROUP=payment-consumer-group
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - daprps-network
+    restart: unless-stopped
+
+  # Basket Service
+  basket-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.basket
+    container_name: daprps-basket-service
+    ports:
+      - "50053:50053"
+      - "8083:8083"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+      - GRPC_PORT=50053
+      - HTTP_PORT=8083
+      - KAFKA_BROKERS=kafka:29092
+      - KAFKA_CONSUMER_GROUP=basket-consumer-group
+    depends_on:
+      - redis
+      - kafka
+    networks:
+      - daprps-network
+    restart: unless-stopped
+
+  # DAPR Sidecar for Product Service
+  product-dapr:
+    image: "daprio/daprd:latest"
+    command: "./daprd -app-id product-service -app-port 50051 -placement-host-address placement:50005 -config /dapr/components/config.yaml -log-level debug"
+    depends_on:
+      - product-service
+    networks:
+      - daprps-network
+    volumes:
+      - "./dapr/components/:/dapr/components"
+
+  # DAPR Sidecar for Payment Service
+  payment-dapr:
+    image: "daprio/daprd:latest"
+    command: "./daprd -app-id payment-service -app-port 50052 -placement-host-address placement:50005 -config /dapr/components/config.yaml -log-level debug"
+    depends_on:
+      - payment-service
+    networks:
+      - daprps-network
+    volumes:
+      - "./dapr/components/:/dapr/components"
+
+  # DAPR Sidecar for Basket Service
+  basket-dapr:
+    image: "daprio/daprd:latest"
+    command: "./daprd -app-id basket-service -app-port 50053 -placement-host-address placement:50005 -config /dapr/components/config.yaml -log-level debug"
+    depends_on:
+      - basket-service
+    networks:
+      - daprps-network
+    volumes:
+      - "./dapr/components/:/dapr/components"
+
+  # DAPR Placement Service
+  placement:
+    image: "daprio/placement:latest"
+    container_name: daprps-placement
+    command: "./placement -port 50005"
+    ports:
+      - "50005:50005"
+    networks:
+      - daprps-network
+
+  # GinGateway API Gateway
+  gingateway:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.gingateway
+    container_name: daprps-gingateway
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+    depends_on:
+      - product-service
+      - payment-service
+      - basket-service
+    networks:
+      - daprps-network
+    restart: unless-stopped
+
+  # Zipkin for Observability
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: daprps-zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - daprps-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  daprps-network:
+    driver: bridge 

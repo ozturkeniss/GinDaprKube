@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package events;
+
+option go_package = "daprps/api/proto/events";
+
+// Payment completed event
+message PaymentCompletedEvent {
+  string payment_id = 1;
+  string order_id = 2;
+  string user_id = 3;
+  double amount = 4;
+  string currency = 5;
+  string payment_method = 6;
+  string completed_at = 7;
+  repeated OrderItem items = 8;
+}
+
+// Stock updated event
+message StockUpdatedEvent {
+  string product_id = 1;
+  int32 old_stock = 2;
+  int32 new_stock = 3;
+  string operation = 4; // "add" or "subtract"
+  string updated_at = 5;
+}
+
+// Basket cleared event
+message BasketClearedEvent {
+  string user_id = 1;
+  string cleared_at = 2;
+  repeated BasketItem items = 3;
+}
+
+// Order item for events
+message OrderItem {
+  string product_id = 1;
+  string product_name = 2;
+  double price = 3;
+  int32 quantity = 4;
+}
+
+// Basket item for events
+message BasketItem {
+  string product_id = 1;
+  string product_name = 2;
+  double price = 3;
+  int32 quantity = 4;
+} 

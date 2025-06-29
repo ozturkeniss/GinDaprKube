@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: daprps-dev
+  labels:
+    name: daprps-dev
+    environment: development 

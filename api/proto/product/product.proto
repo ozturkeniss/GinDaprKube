@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package product;
+
+option go_package = "daprps/api/proto/product";
+
+service ProductService {
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+  rpc UpdateStock(UpdateStockRequest) returns (UpdateStockResponse);
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+}
+
+message Product {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  double price = 4;
+  int32 stock = 5;
+  string category = 6;
+}
+
+message GetProductRequest {
+  string product_id = 1;
+}
+
+message GetProductResponse {
+  Product product = 1;
+  string error = 2;
+}
+
+message UpdateStockRequest {
+  string product_id = 1;
+  int32 quantity = 2;
+  string operation = 3; // "add" or "subtract"
+}
+
+message UpdateStockResponse {
+  bool success = 1;
+  string error = 2;
+  int32 new_stock = 3;
+}
+
+message ListProductsRequest {
+  string category = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+message ListProductsResponse {
+  repeated Product products = 1;
+  string error = 2;
+} 

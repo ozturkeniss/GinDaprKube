@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package payment;
+
+option go_package = "daprps/api/proto/payment";
+
+service PaymentService {
+  rpc ProcessPayment(ProcessPaymentRequest) returns (ProcessPaymentResponse);
+  rpc GetPaymentStatus(GetPaymentStatusRequest) returns (GetPaymentStatusResponse);
+  rpc RefundPayment(RefundPaymentRequest) returns (RefundPaymentResponse);
+}
+
+message Payment {
+  string id = 1;
+  string order_id = 2;
+  double amount = 3;
+  string currency = 4;
+  string status = 5; // "pending", "completed", "failed", "refunded"
+  string payment_method = 6;
+  string created_at = 7;
+  string updated_at = 8;
+}
+
+message ProcessPaymentRequest {
+  string order_id = 1;
+  double amount = 2;
+  string currency = 3;
+  string payment_method = 4;
+  string card_number = 5;
+  string card_holder = 6;
+  string expiry_date = 7;
+  string cvv = 8;
+}
+
+message ProcessPaymentResponse {
+  Payment payment = 1;
+  bool success = 2;
+  string error = 3;
+}
+
+message GetPaymentStatusRequest {
+  string payment_id = 1;
+}
+
+message GetPaymentStatusResponse {
+  Payment payment = 1;
+  string error = 2;
+}
+
+message RefundPaymentRequest {
+  string payment_id = 1;
+  double amount = 2;
+  string reason = 3;
+}
+
+message RefundPaymentResponse {
+  bool success = 1;
+  string error = 2;
+  string refund_id = 3;
+} 

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gingateway
+  labels:
+    app: gingateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gingateway
+  template:
+    metadata:
+      labels:
+        app: gingateway
+    spec:
+      containers:
+        - name: gingateway
+          image: daprps-gingateway:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi" 
