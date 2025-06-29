@@ -4,65 +4,8 @@ A modern, event-driven microservices architecture built with Go, DAPR, Kafka, an
 
 ## 🏗️ Architecture Overview
 
-```mermaid
-graph TB
-    subgraph "Client Layer"
-        Client[Web/Mobile Client]
-    end
-    
-    subgraph "API Gateway"
-        Gateway[GinGateway API Gateway<br/>Port: 8080]
-    end
-    
-    subgraph "Microservices"
-        Product[Product Service<br/>Port: 8081/50051]
-        Payment[Payment Service<br/>Port: 8082/50052]
-        Basket[Basket Service<br/>Port: 8083/50053]
-    end
-    
-    subgraph "DAPR Components"
-        DAPR1[DAPR Sidecar<br/>Product]
-        DAPR2[DAPR Sidecar<br/>Payment]
-        DAPR3[DAPR Sidecar<br/>Basket]
-    end
-    
-    subgraph "Event Streaming"
-        Kafka[Apache Kafka<br/>Port: 9092]
-        Zookeeper[Zookeeper<br/>Port: 2181]
-    end
-    
-    subgraph "Data Layer"
-        PostgreSQL[(PostgreSQL<br/>Port: 5432)]
-        Redis[(Redis<br/>Port: 6379)]
-    end
-    
-    subgraph "Observability"
-        Zipkin[Zipkin Tracing<br/>Port: 9411]
-    end
-    
-    Client --> Gateway
-    Gateway --> Product
-    Gateway --> Payment
-    Gateway --> Basket
-    
-    Product --> DAPR1
-    Payment --> DAPR2
-    Basket --> DAPR3
-    
-    DAPR1 --> Kafka
-    DAPR2 --> Kafka
-    DAPR3 --> Kafka
-    
-    Product --> PostgreSQL
-    Payment --> PostgreSQL
-    Basket --> Redis
-    
-    DAPR1 --> Zipkin
-    DAPR2 --> Zipkin
-    DAPR3 --> Zipkin
-    
-    Kafka --> Zookeeper
-```
+![Uploading image.png…]()
+
 
 ## 🔄 Event Flow Architecture
 
